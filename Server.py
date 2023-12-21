@@ -19,7 +19,7 @@ users = []
 
 class User:
     username = ""
-    password = ""   # TODO: encrypt password
+    password = ""
     is_online = False
     is_busy = False
     message = []

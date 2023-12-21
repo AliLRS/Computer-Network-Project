@@ -2,6 +2,7 @@ import socket
 import threading
 import os
 import msvcrt
+import hashlib
 
 clear = lambda: os.system('cls')
 
@@ -178,6 +179,7 @@ def main_menu():
         # Choosing Nickname
         nickname = input(f"Enter your username: ")
         password = input(f"Enter your password: ")
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
     
         # Connecting To Server
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -189,11 +191,12 @@ def main_menu():
 
         message = client.recv(1024).decode('ascii')
         if message == 'PASS':
-            client.send(password.encode('ascii'))
+            client.send(hashed_password.encode('ascii'))
 
         while 'OK' != client.recv(1024).decode('ascii'):
             password = input('Wrong Password\nTry again: ')
-            client.send(password.encode('ascii'))
+            hashed_password = hashlib.sha256(password.encode()).hexdigest()
+            client.send(hashed_password.encode('ascii'))
         
         # Starting Threads For Listening And Reading
         receive_thread = threading.Thread(target=receive, args=(client,nickname))
