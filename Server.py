@@ -66,9 +66,9 @@ def handle(client):
                             recipient_socket = user.client
                             message = "receive-message"+message[message.find('#')+1:]
                             unitcast(message.encode('ascii'),recipient_socket)
-                            user.client.send('OK'.encode('ascii'))
+                            user.client.send('send-private#OK'.encode('ascii'))
                         else:
-                            client.send("User is busy!".encode('ascii'))
+                            client.send("send-private#NOTOK".encode('ascii'))
                         
 
             elif message.startswith('modify'):
@@ -76,19 +76,23 @@ def handle(client):
                 for user in users:
                     if user.client == client:
                         if message[1] == "status":
-                            print(f"{user.username}'s status is updated to {message[2]}")
                             if message[2] == 'busy':
                                 user.busy(True)
                             else:
                                 user.busy(False)
                             user.client.send('modify-status#OK'.encode('ascii'))
+                            print(f"{user.username}'s status is updated to {message[2]}")
                             break
 
                         if message[1] == "username":
+                            break_flag = False
                             for user in users:
                                 if user.username == message[2]:
                                     user.client.send('modify-username#NOTOK'.encode('ascii'))
+                                    break_flag = True
                                     break
+                            if break_flag:
+                                break
                             prv_username = user.username
                             user.change_username(message[2])
                             user.client.send('modify-username#OK'.encode('ascii'))

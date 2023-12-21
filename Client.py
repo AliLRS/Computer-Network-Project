@@ -75,14 +75,11 @@ def internal_menu(client,nickname):
         
         print("Enter your message:")
         private_message = input()
+        clear()
         strtime = stime()
         message = 'send-private{}#{}\n{}: {}'.format(client_nicknames[recipient], strtime, nickname, private_message)
         client.send(message.encode('ascii'))
-        clear()
-        if client.recv(1024).decode('ascii') == 'OK':
-            print('Your message is sent\n')
-        else:
-            print('User is busy!\n')
+        time.sleep(0.1)
         internal_menu(client,nickname)
 
     elif choose == "4":
@@ -110,20 +107,23 @@ def internal_menu(client,nickname):
             client.send('modify#status#{}'.format(status).encode('ascii'))
         else:
             clear()
-            print('Invalid input')
+            print('Invalid input\n')
+        time.sleep(0.1)
         internal_menu(client,nickname)
         
     elif choose == "6":
         new_username = input('Enter your new username: ')
-        client.send('modify#username#{}'.format(new_username).encode('ascii'))
         clear()
+        client.send('modify#username#{}'.format(new_username).encode('ascii'))
+        time.sleep(0.1)
         internal_menu(client,nickname)
         
     elif choose == "7":
         new_password = input('Enter your new password: ')
+        clear()
         hashed_new_password = hashlib.sha256(new_password.encode()).hexdigest()
         client.send('modify#password#{}'.format(hashed_new_password).encode('ascii'))
-        clear()
+        time.sleep(0.1)
         internal_menu(client,nickname)
 
     elif choose == "8":
@@ -147,27 +147,33 @@ def receive(client,nickname):
 
             if message.startswith('receive-message'):
                 if private_mode:
-                    print(message[3:])
+                    print(message[15:])
                 else:
-                    private_messages.append(message[3:])
+                    private_messages.append(message[15:])
+            
+            elif message.startswith('send-private'):
+                if message[13:] == 'OK':
+                    print('Your message is sent\n')
+                else:
+                    print('User is busy!\n')
 
             elif message.startswith('modify-status'):
                 if message[14:] == 'OK':
-                    print('Your Status is updated')
+                    print('Your Status is updated\n')
                 else:
-                    print('Your request was not accepted')
+                    print('Your request was not accepted\n')
 
             elif message.startswith('modify-username'):
                 if message[16:] == 'OK':
-                    print('Your Username is updated')
+                    print('Your Username is updated\n')
                 else:
-                    print('This username is already taken!')
+                    print('This username is already taken!\n')
 
             elif message.startswith('modify-password'):
                 if message[16:] == 'OK':
-                    print('Your Password is updated')
+                    print('Your Password is updated\n')
                 else:
-                    print('Your request was not accepted')
+                    print('Your request was not accepted\n')
 
             else:
                 if public_mode:
