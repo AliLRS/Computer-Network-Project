@@ -34,7 +34,7 @@ def internal_menu(client,nickname):
     global public_mode
     global private_mode
 
-    choose = input("1. Get connected clients\n2. Enter Public Chatroom\n3. Send Private Message\n4. Get Private Messages\n5. Exit\n")
+    choose = input("1. Get connected clients\n2. Enter Public Chatroom\n3. Send Private Message\n4. Get Private Messages\n5. Change my status\n6.Exit\n")
     clear()
 
     if choose == "1":
@@ -89,12 +89,31 @@ def internal_menu(client,nickname):
         clear()
         private_mode=False
         internal_menu(client,nickname)
-    
+
     elif choose == "5":
-        
+        status = input('What is your status?\n1.busy    2.available\n')
+        clear()
+        if status == "1" or status == "2":
+            if status == "1":
+                status = "busy"
+            else:
+                status = "available"
+            print('Your Status is updated')
+            client.send('modify#status#{}'.format(status).encode('ascii'))
+        else:
+            clear()
+            print('Your request was not accepted')
+        internal_menu(client,nickname)
+
+    elif choose == "6":
         clear()
         print('Exit program')
         exit()
+    
+    else:
+        clear()
+        print('Invalid input')
+        internal_menu(client,nickname)
 
 # Listening to Server and Sending Nickname
 def receive(client,nickname):

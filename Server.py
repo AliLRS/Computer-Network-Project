@@ -12,17 +12,22 @@ server.bind((host, port))
 server.listen()
 print("Server is running!")
 
-# Lists For online_clients and Their Nicknames
-online_clients = []
-nicknames = []
+# List for users
 users = []
 
 class User:
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     username = ""
     password = ""
     is_online = False
     is_busy = False
     message = []
+
+    def __init__(self, client, username, password):
+        self.client = client
+        self.username = username
+        self.password = password
+        self.is_online = True
 
     def change_username(self, new_name):
         self.username = new_name
@@ -38,10 +43,10 @@ class User:
 
 # Sending Messages To All Connected online_clients
 def broadcast(message,curr):
-    for client in online_clients:
-        if client == curr:
+    for user in users:
+        if user.client == curr:
             continue
-        client.send(message)
+        user.client.send(message)
 
 # Sending Messages To Special Client
 def unitcast(message,to):
@@ -52,23 +57,36 @@ def handle(client):
     while True:
         try:
             message = client.recv(1024).decode('ascii')
-            if '$$$' in message:
+
+            if message.startswith('$$$'):
                 recipient_nickname = message[3:message.find('#')]
-                recipient_socket = online_clients[nicknames.index(recipient_nickname)]
+                for user in users:
+                    if user.username == recipient_nickname:
+                        recipient_socket = user.client
                 message = "$$$"+message[message.find('#')+1:]
                 unitcast(message.encode('ascii'),recipient_socket)
+
+            elif message.startswith('modify'):
+                message = message.split('#')
+                for user in users:
+                    if user.client == client:
+                        if message[1] == "status":
+                            print('updated status')
+                            if message[2] == 'busy':
+                                user.busy(True)
+                                print(user.is_busy)
+                            else:
+                                user.busy(False)
             else:
                 # Broadcasting Messages
                 broadcast(message.encode('ascii'),client)
         except Exception as e:
             print("Exception:", e)
-            # Removing And Closing online_clients
-            index = online_clients.index(client)
-            online_clients.remove(client)
-            client.close()
-            nickname = nicknames[index]
-            broadcast('{} left!'.format(nickname).encode('ascii'),client)
-            nicknames.remove(nickname)
+            for user in users:
+                if client == user.client:
+                    broadcast('{} left!'.format(user.username).encode('ascii'),user.client)
+                    user.online(False)
+                    client.close()
             break
 
 # Receiving / Listening Function
@@ -88,9 +106,7 @@ def receive():
             if user.username == nickname:
                 while not login:
                     if user.password == password:
-                        nicknames.append(nickname) 
-                        online_clients.append(client)
-                        user.is_online = True
+                        user.online(True)
                         login = True
                         client.send('OK'.encode('ascii'))
                     else:
@@ -98,13 +114,8 @@ def receive():
                         password = client.recv(1024).decode('ascii') 
                        
         if not login:
-            new_user = User()
-            new_user.username = nickname
-            new_user.password = password
-            new_user.is_online = True
+            new_user = User(client, nickname, password)
             users.append(new_user)
-            nicknames.append(nickname) 
-            online_clients.append(client)
             client.send('OK'.encode('ascii'))
         
         # Print And Broadcast Nickname
@@ -123,7 +134,11 @@ def get_online_clients():
     UDP_server_socket.bind(("",UDP_port))
     while True:
         _ , client_address = UDP_server_socket.recvfrom(2048)
-        modified_message = ', '.join(nicknames)
+        usernames = []
+        for user in users:
+            if user.is_online == True:
+                usernames.append(user.username)
+        modified_message = ', '.join(usernames)
         UDP_server_socket.sendto(modified_message.encode('ascii'),client_address)
 
 
