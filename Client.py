@@ -34,7 +34,7 @@ def internal_menu(client,nickname):
     global public_mode
     global private_mode
 
-    choose = input("1. Get connected clients\n2. Enter Public Chatroom\n3. Send Private Message\n4. Get Private Messages\n5. Change my status\n6.Exit\n")
+    choose = input("1. Get connected clients\n2. Enter Public Chatroom\n3. Send Private Message\n4. Get Private Messages\n5. Change status\n6. Change username\n7. Change password\n8. Exit\n")
     clear()
 
     if choose == "1":
@@ -71,7 +71,7 @@ def internal_menu(client,nickname):
         print("Enter your message:")
         private_message = input()
         
-        message = '$$${}#{}: {}'.format(client_nicknames[recipient],nickname, private_message)
+        message = 'send-private{}#{}: {}'.format(client_nicknames[recipient],nickname, private_message)
         client.send(message.encode('ascii'))
         clear()
         internal_menu(client,nickname)
@@ -104,8 +104,29 @@ def internal_menu(client,nickname):
             clear()
             print('Your request was not accepted')
         internal_menu(client,nickname)
-
+        
     elif choose == "6":
+        new_username = input('Enter your new username: ')
+        client.send('modify#username#{}'.format(new_username).encode('ascii'))
+        clear()
+        if client.recv(1024).decode('ascii') == 'OK':
+            print('Your Username is updated')
+        else:
+            print('Your request was not accepted')
+        internal_menu(client,nickname)
+        
+    elif choose == "7":
+        new_password = input('Enter your new password: ')
+        hashed_new_password = hashlib.sha256(new_password.encode()).hexdigest()
+        client.send('modify#password#{}'.format(hashed_new_password).encode('ascii'))
+        clear()
+        if client.recv(1024).decode('ascii') == 'OK':
+            print('Your Password is updated')
+        else:
+            print('Your request was not accepted')
+        internal_menu(client,nickname)
+
+    elif choose == "8":
         clear()
         print('Exit program')
         exit()
@@ -123,7 +144,7 @@ def receive(client,nickname):
         try:
             # Receive Message From Server
             message = client.recv(1024).decode('ascii')
-            if message.startswith('$$$'):
+            if message.startswith('receive-message'):
                 if private_mode:
                     print(message[3:])
                 else:

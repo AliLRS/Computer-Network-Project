@@ -58,13 +58,17 @@ def handle(client):
         try:
             message = client.recv(1024).decode('ascii')
 
-            if message.startswith('$$$'):
+            if message.startswith('send-private'):
                 recipient_nickname = message[3:message.find('#')]
                 for user in users:
                     if user.username == recipient_nickname:
-                        recipient_socket = user.client
-                message = "$$$"+message[message.find('#')+1:]
-                unitcast(message.encode('ascii'),recipient_socket)
+                        if not user.is_busy:
+                            recipient_socket = user.client
+                            message = "receive-message"+message[message.find('#')+1:]
+                            unitcast(message.encode('ascii'),recipient_socket)
+                        else:
+                            client.send("User is busy!".encode('ascii'))
+                        
 
             elif message.startswith('modify'):
                 message = message.split('#')
@@ -77,6 +81,16 @@ def handle(client):
                                 print(user.is_busy)
                             else:
                                 user.busy(False)
+                        if message[1] == "username":
+                            for user in users:
+                                if user.username == message[2]:
+                                    client.send('Username is already taken!'.encode('ascii'))
+                                    break
+                            user.change_username(message[2])
+                            client.send('OK'.encode('ascii'))
+                        if message[1] == "password":
+                            user.change_password(message[2])
+                        break
             else:
                 # Broadcasting Messages
                 broadcast(message.encode('ascii'),client)
