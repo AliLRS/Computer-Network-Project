@@ -59,13 +59,14 @@ def handle(client):
             message = client.recv(1024).decode('ascii')
 
             if message.startswith('send-private'):
-                recipient_nickname = message[3:message.find('#')]
+                recipient_nickname = message[12:message.find('#')]
                 for user in users:
                     if user.username == recipient_nickname:
                         if not user.is_busy:
                             recipient_socket = user.client
                             message = "receive-message"+message[message.find('#')+1:]
                             unitcast(message.encode('ascii'),recipient_socket)
+                            client.send('OK'.encode('ascii'))
                         else:
                             client.send("User is busy!".encode('ascii'))
                         
@@ -90,6 +91,7 @@ def handle(client):
                             client.send('OK'.encode('ascii'))
                         if message[1] == "password":
                             user.change_password(message[2])
+                            client.send('OK'.encode('ascii'))
                         break
             else:
                 # Broadcasting Messages

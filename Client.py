@@ -3,6 +3,7 @@ import threading
 import os
 import msvcrt
 import hashlib
+import time
 
 clear = lambda: os.system('cls')
 
@@ -70,10 +71,14 @@ def internal_menu(client,nickname):
         
         print("Enter your message:")
         private_message = input()
-        
-        message = 'send-private{}#{}: {}'.format(client_nicknames[recipient],nickname, private_message)
+        time = ' '.join(time.asctime(time.localtime()).split(' ')[1:4]) #time format: month day hour:min:sec
+        message = 'send-private{}#{}\n{}: {}'.format(client_nicknames[recipient], time, nickname, private_message)
         client.send(message.encode('ascii'))
         clear()
+        if client.recv(1024).decode('ascii') == 'OK':
+            print('Your message is sent\n')
+        else:
+            print('User is busy!\n')
         internal_menu(client,nickname)
 
     elif choose == "4":
@@ -173,7 +178,8 @@ def write(client,nickname):
             internal_menu(client,nickname)
             break
         else:
-            message = '{}: {}'.format(nickname, text)
+            time = ' '.join(time.asctime(time.localtime()).split(' ')[1:4]) #time format: month day hour:min:sec
+            message = '{}\n{}: {}'.format(time, nickname, text)
             client.send(message.encode('ascii'))
         
 def read_private_buffer():
