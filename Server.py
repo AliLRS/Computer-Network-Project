@@ -66,7 +66,7 @@ def handle(client):
                             recipient_socket = user.client
                             message = "receive-message"+message[message.find('#')+1:]
                             unitcast(message.encode('ascii'),recipient_socket)
-                            client.send('OK'.encode('ascii'))
+                            user.client.send('OK'.encode('ascii'))
                         else:
                             client.send("User is busy!".encode('ascii'))
                         
@@ -76,23 +76,29 @@ def handle(client):
                 for user in users:
                     if user.client == client:
                         if message[1] == "status":
-                            print('updated status')
+                            print(f"{user.username}'s status is updated to {message[2]}")
                             if message[2] == 'busy':
                                 user.busy(True)
-                                print(user.is_busy)
                             else:
                                 user.busy(False)
+                            user.client.send('modify-status#OK'.encode('ascii'))
+                            break
+
                         if message[1] == "username":
                             for user in users:
                                 if user.username == message[2]:
-                                    client.send('Username is already taken!'.encode('ascii'))
+                                    user.client.send('modify-username#NOTOK'.encode('ascii'))
                                     break
+                            prv_username = user.username
                             user.change_username(message[2])
-                            client.send('OK'.encode('ascii'))
+                            user.client.send('modify-username#OK'.encode('ascii'))
+                            print(f"{prv_username}'s username is updated to {message[2]}")
+
                         if message[1] == "password":
                             user.change_password(message[2])
-                            client.send('OK'.encode('ascii'))
-                        break
+                            user.client.send('modify-password#OK'.encode('ascii'))
+                            print(f"{user.username}'s password is updated.")
+                            break
             else:
                 # Broadcasting Messages
                 broadcast(message.encode('ascii'),client)
@@ -135,7 +141,7 @@ def receive():
             client.send('OK'.encode('ascii'))
         
         # Print And Broadcast Nickname
-        print("Nickname: {}".format(nickname))
+        print("Username: {}".format(nickname))
         broadcast("{} joined!".format(nickname).encode('ascii'),client)
         client.send('Connected to Chatroom!'.encode('ascii'))
 

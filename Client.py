@@ -75,8 +75,8 @@ def internal_menu(client,nickname):
         
         print("Enter your message:")
         private_message = input()
-        time = stime()
-        message = 'send-private{}#{}\n{}: {}'.format(client_nicknames[recipient], time, nickname, private_message)
+        strtime = stime()
+        message = 'send-private{}#{}\n{}: {}'.format(client_nicknames[recipient], strtime, nickname, private_message)
         client.send(message.encode('ascii'))
         clear()
         if client.recv(1024).decode('ascii') == 'OK':
@@ -107,21 +107,16 @@ def internal_menu(client,nickname):
                 status = "busy"
             else:
                 status = "available"
-            print('Your Status is updated')
             client.send('modify#status#{}'.format(status).encode('ascii'))
         else:
             clear()
-            print('Your request was not accepted')
+            print('Invalid input')
         internal_menu(client,nickname)
         
     elif choose == "6":
         new_username = input('Enter your new username: ')
         client.send('modify#username#{}'.format(new_username).encode('ascii'))
         clear()
-        if client.recv(1024).decode('ascii') == 'OK':
-            print('Your Username is updated')
-        else:
-            print('Your request was not accepted')
         internal_menu(client,nickname)
         
     elif choose == "7":
@@ -129,10 +124,6 @@ def internal_menu(client,nickname):
         hashed_new_password = hashlib.sha256(new_password.encode()).hexdigest()
         client.send('modify#password#{}'.format(hashed_new_password).encode('ascii'))
         clear()
-        if client.recv(1024).decode('ascii') == 'OK':
-            print('Your Password is updated')
-        else:
-            print('Your request was not accepted')
         internal_menu(client,nickname)
 
     elif choose == "8":
@@ -153,11 +144,31 @@ def receive(client,nickname):
         try:
             # Receive Message From Server
             message = client.recv(1024).decode('ascii')
+
             if message.startswith('receive-message'):
                 if private_mode:
                     print(message[3:])
                 else:
                     private_messages.append(message[3:])
+
+            elif message.startswith('modify-status'):
+                if message[14:] == 'OK':
+                    print('Your Status is updated')
+                else:
+                    print('Your request was not accepted')
+
+            elif message.startswith('modify-username'):
+                if message[16:] == 'OK':
+                    print('Your Username is updated')
+                else:
+                    print('This username is already taken!')
+
+            elif message.startswith('modify-password'):
+                if message[16:] == 'OK':
+                    print('Your Password is updated')
+                else:
+                    print('Your request was not accepted')
+
             else:
                 if public_mode:
                     print(message)
@@ -182,8 +193,8 @@ def write(client,nickname):
             internal_menu(client,nickname)
             break
         else:
-            time = stime()
-            message = '{}\n{}: {}'.format(time, nickname, text)
+            strtime = stime()
+            message = '{}\n{}: {}'.format(strtime, nickname, text)
             client.send(message.encode('ascii'))
         
 def read_private_buffer():
