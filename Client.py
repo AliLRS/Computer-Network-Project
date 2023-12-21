@@ -18,6 +18,10 @@ public_mode = False
 def get_char():
     return msvcrt.getch().decode()
 
+def stime():
+    arr = time.asctime(time.localtime()).split(' ')
+    return ' '.join(arr[1:3]) + ' at ' + ' '.join(arr[3:4])
+
 def get_clients():
 
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -71,7 +75,7 @@ def internal_menu(client,nickname):
         
         print("Enter your message:")
         private_message = input()
-        time = ' '.join(time.asctime(time.localtime()).split(' ')[1:4]) #time format: month day hour:min:sec
+        time = stime()
         message = 'send-private{}#{}\n{}: {}'.format(client_nicknames[recipient], time, nickname, private_message)
         client.send(message.encode('ascii'))
         clear()
@@ -178,7 +182,7 @@ def write(client,nickname):
             internal_menu(client,nickname)
             break
         else:
-            time = ' '.join(time.asctime(time.localtime()).split(' ')[1:4]) #time format: month day hour:min:sec
+            time = stime()
             message = '{}\n{}: {}'.format(time, nickname, text)
             client.send(message.encode('ascii'))
         
