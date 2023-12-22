@@ -156,7 +156,7 @@ def receive():
         # Print And Broadcast Nickname
         print("Username: {}".format(nickname))
         # broadcast("{} joined!".format(nickname).encode('ascii'),client)
-        # client.send('Connected to Chatroom!'.encode('ascii'))
+        client.send('Connected to Chatroom!'.encode('ascii'))
 
         # Start Handling Thread For Client
         thread = threading.Thread(target=handle, args=(client,))

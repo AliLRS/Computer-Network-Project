@@ -82,6 +82,7 @@ def busy_user_menu(client,nickname):
     elif choose == "5":
         clear()
         print('Exit program')
+        client.close()
         exit()
     
     else:
@@ -112,6 +113,7 @@ def internal_menu(client,nickname):
         
         # Starting Thread For Writing
         write_thread = threading.Thread(target=write, args=(client,nickname))
+        write_thread.daemon = True
         write_thread.start()
 
         # Starting Thread For Readin public buffer
@@ -188,6 +190,7 @@ def internal_menu(client,nickname):
     elif choose == "8":
         clear()
         print('Exit program')
+        client.close()
         exit()
     
     else:
@@ -329,6 +332,7 @@ def main_menu():
 
         # Starting Threads For Listening And Reading
         receive_thread = threading.Thread(target=receive, args=(client,nickname))
+        receive_thread.daemon = True
         receive_thread.start()
         
         if status == "available":
