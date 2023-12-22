@@ -29,6 +29,8 @@ class User:
         self.password = password
         self.is_online = True
 
+    def change_client(self, new_client):
+        self.client = new_client
     def change_username(self, new_name):
         self.username = new_name
     def change_password(self, new_password):
@@ -66,7 +68,7 @@ def handle(client):
                             recipient_socket = user.client
                             message = "receive-message"+message[message.find('#')+1:]
                             unitcast(message.encode('ascii'),recipient_socket)
-                            user.client.send('send-private#OK'.encode('ascii'))
+                            client.send('send-private#OK'.encode('ascii'))
                         else:
                             client.send("send-private#NOTOK".encode('ascii'))
                         
@@ -86,8 +88,8 @@ def handle(client):
 
                         if message[1] == "username":
                             break_flag = False
-                            for user in users:
-                                if user.username == message[2]:
+                            for checkuser in users:
+                                if checkuser.username == message[2]:
                                     user.client.send('modify-username#NOTOK'.encode('ascii'))
                                     break_flag = True
                                     break
@@ -134,9 +136,10 @@ def receive():
                     if user.password == password:
                         user.online(True)
                         login = True
+                        user.change_client(client)
                         client.send('OK'.encode('ascii'))
                     else:
-                        client.send('Wrong'.encode('ascii'))
+                        client.send('NOTOK'.encode('ascii'))
                         password = client.recv(1024).decode('ascii') 
                        
         if not login:

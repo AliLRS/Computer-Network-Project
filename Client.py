@@ -33,7 +33,7 @@ def get_clients():
         return 'No clients connected'
     
     return message.decode('ascii')
-
+ 
 def internal_menu(client,nickname):
 
     global public_mode
@@ -200,7 +200,7 @@ def write(client,nickname):
             break
         else:
             strtime = stime()
-            message = '{}\n{}: {}'.format(strtime, nickname, text)
+            message = '\n{}\n{}: {}'.format(strtime, nickname, text)
             client.send(message.encode('ascii'))
         
 def read_private_buffer():
