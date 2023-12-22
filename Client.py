@@ -119,9 +119,7 @@ def internal_menu(client,nickname):
         write_thread = threading.Thread(target=write, args=(client,nickname))
         write_thread.start()
 
-        # Starting Thread For Readin public buffer
-        read_public_buffer_thread = threading.Thread(target=read_public_buffer, args=())
-        read_public_buffer_thread.start()
+        read_public_buffer()
 
     elif choose == "3":
 
@@ -141,6 +139,7 @@ def internal_menu(client,nickname):
         strtime = stime()
         message = 'send-private{}#\n{}\n{}: {}\n'.format(client_nicknames[recipient-1], strtime, nickname, private_message)
         client.send(message.encode('ascii'))
+        # private_messages.append(message[message.find('#')+1:])
         time.sleep(0.1)
         internal_menu(client,nickname)
 
@@ -149,9 +148,7 @@ def internal_menu(client,nickname):
         private_mode=True
         print(f'Press any key to quit')
         
-        # Starting Thread For Readin private buffer
-        read_private_buffer_thread = threading.Thread(target=read_private_buffer, args=())
-        read_private_buffer_thread.start()
+        read_private_buffer()
 
         get_char()
         clear()
@@ -219,6 +216,7 @@ def receive(client,nickname):
                 if message.startswith('receive-message'):
                     if private_mode:
                         print(message[15:])
+                        private_messages.append(message[15:])
                     else:
                         private_messages.append(message[15:])
                 
@@ -249,6 +247,7 @@ def receive(client,nickname):
                 else:
                     if public_mode:
                         print(message)
+                        public_messages.append(message)
                     else:
                         public_messages.append(message)
                     
@@ -278,26 +277,18 @@ def write(client,nickname):
                 strtime = stime()
                 message = '\n{}\n{}: {}\n'.format(strtime, nickname, text)
                 client.send(message.encode('ascii'))
+                public_messages.append(message)
+                clear()
+                read_public_buffer()
+
 
 def read_private_buffer():
-    global private_mode
-    while True:
-        if not private_mode:
-            break
-        if private_messages:
-            for message in private_messages:
-                print(message)
-            private_messages.clear()
+    for message in private_messages:
+        print(message)
 
 def read_public_buffer():
-    global public_mode
-    while True:
-        if not public_mode:
-            break
-        if public_messages:
-            for message in public_messages:
-                print(message)
-            public_messages.clear()
+    for message in public_messages:
+        print(message)
 
 
 #main menu comes up
