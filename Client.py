@@ -13,6 +13,7 @@ public_messages = []
 
 #Chat mode
 private_mode = False
+chatTo = ""
 public_mode = False
 quit = False
 
@@ -98,9 +99,10 @@ def internal_menu(client,nickname):
 
     global public_mode
     global private_mode
+    global chatTo
     global quit
 
-    choose = input("1. Get connected clients\n2. Enter Public Chatroom\n3. Send Private Message\n4. Get Private Messages\n5. Change status\n6. Change username\n7. Change password\n8. Exit\n")
+    choose = input("1. Get connected clients\n2. Enter Public Chatroom\n3. Enter Private Chatroom\n4. Enter Group Chatroom\n5. Change status\n6. Change username\n7. Change password\n8. Exit\n")
     clear()
 
     if choose == "1":
@@ -123,37 +125,36 @@ def internal_menu(client,nickname):
 
     elif choose == "3":
 
+        private_mode = True
+
         client_nicknames = get_clients().split(', ')
-        print('Who is the recipient of this message?')
+        print('Directs:')
         num = 1
         for name in client_nicknames:
             print(str(num)+". "+name)
             num=num+1
         
         recipient = int(input())
+        chatTo = client_nicknames[recipient-1]
 
-        
-        print("Enter your message:")
-        private_message = input()
         clear()
-        strtime = stime()
-        message = 'send-private{}#\n{}\n{}: {}\n'.format(client_nicknames[recipient-1], strtime, nickname, private_message)
-        client.send(message.encode('ascii'))
-        # private_messages.append(message[message.find('#')+1:])
-        time.sleep(0.1)
-        internal_menu(client,nickname)
+        write_privatr_thread = threading.Thread(target=write_private, args=(client,nickname,client_nicknames[recipient-1]))
+        write_privatr_thread.start()
+
+        read_private_buffer(client_nicknames[recipient-1],nickname)
 
     elif choose == "4":
 
-        private_mode=True
-        print(f'Press any key to quit')
+        # private_mode=True
+        # print(f'Press any key to quit')
         
-        read_private_buffer()
+        # read_private_buffer()
 
-        get_char()
-        clear()
-        private_mode=False
-        internal_menu(client,nickname)
+        # get_char()
+        # clear()
+        # private_mode=False
+        # internal_menu(client,nickname)
+        pass
 
     elif choose == "5":
         status = input('What is your status?\n1.busy    2.available\n')
@@ -205,6 +206,7 @@ def receive(client,nickname):
     global quit
     global private_mode
     global public_mode
+    global chatTo
     while True:
         try:
             if quit:
@@ -215,7 +217,10 @@ def receive(client,nickname):
 
                 if message.startswith('receive-message'):
                     if private_mode:
-                        print(message[15:])
+                        text = message.split('\n')[2]
+                        sender = text[:text.find(':')]
+                        if (chatTo == sender):
+                            print(message[message.find('#')+1:])
                         private_messages.append(message[15:])
                     else:
                         private_messages.append(message[15:])
@@ -281,10 +286,35 @@ def write(client,nickname):
                 clear()
                 read_public_buffer()
 
+def write_private(client,nickname,recipient):
+    global quit
+    global private_mode
+    global chatTo
+    while True:
+        if quit:
+            break
+        else:
+            text = input('')
+            if text == "quit":
+                clear()
+                private_mode=False
+                chatTo = ""
+                internal_menu(client,nickname)
+                break
+            else:
+                strtime = stime()
+                message = 'send-private{}#\n{}\n{}: {}\n'.format(recipient, strtime, nickname, text)
+                client.send(message.encode('ascii'))
+                private_messages.append(message[12:])
+                clear()
+                read_private_buffer(recipient,nickname)
 
-def read_private_buffer():
+def read_private_buffer(recipient,nickname):
     for message in private_messages:
-        print(message)
+        text = message.split('\n')[2]
+        sender = text[:text.find(':')]
+        if (message[:message.find('#')] == recipient and sender == nickname) or (message[:message.find('#')] == nickname and sender == recipient):
+            print(message[message.find('#')+1:])
 
 def read_public_buffer():
     for message in public_messages:
@@ -346,7 +376,6 @@ def main_menu():
     elif choose == "3":
         clear()
         quit = True
-        client.close()
         exit()
     
     else:

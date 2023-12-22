@@ -70,7 +70,7 @@ def handle(client):
                     if user.username == recipient_nickname:
                         if not user.is_busy:
                             recipient_socket = user.client
-                            message = "receive-message"+message[message.find('#')+1:]
+                            message = "receive-message"+message[12:]
                             message = message.encode('ascii')
                             if user.is_online:
                                 unitcast(message,recipient_socket)
@@ -166,8 +166,8 @@ def receive():
         # Print And Broadcast Nickname
         print("Username: {}".format(nickname))
         broadcast("{} joined!".format(nickname).encode('ascii'),client)
-        client.send('Connected to Chatroom!'.encode('ascii'))
-        time.sleep(0.1)
+        # client.send('Connected to Chatroom!'.encode('ascii'))
+        time.sleep(0.2)
         for user in users:
             if user.client == client:
                 for message in user.messages:
