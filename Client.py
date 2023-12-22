@@ -247,7 +247,6 @@ def receive(client,nickname):
                         print('Your request was not accepted\n')
 
                 else:
-                    print(public_mode)
                     if public_mode:
                         print(message)
                     else:
@@ -348,7 +347,6 @@ def main_menu():
         receive_thread = threading.Thread(target=receive, args=(client,nickname))
         receive_thread.start()
         
-        print(status)
         if status == "available":
             internal_menu(client,nickname)
         elif status == "busy":
