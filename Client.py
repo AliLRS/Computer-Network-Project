@@ -14,6 +14,7 @@ public_messages = []
 #Chat mode
 private_mode = False
 public_mode = False
+quit = False
 
 def get_char():
     return msvcrt.getch().decode()
@@ -35,6 +36,7 @@ def get_clients():
     return message.decode('ascii')
 
 def busy_user_menu(client,nickname):
+    global quit
     choose = input("1. Get connected clients\n2. Change status\n3. Change username\n4. Change password\n5. Exit\n")
     clear()
 
@@ -82,6 +84,7 @@ def busy_user_menu(client,nickname):
     elif choose == "5":
         clear()
         print('Exit program')
+        quit = True
         client.close()
         exit()
     
@@ -95,6 +98,7 @@ def internal_menu(client,nickname):
 
     global public_mode
     global private_mode
+    global quit
 
     choose = input("1. Get connected clients\n2. Enter Public Chatroom\n3. Send Private Message\n4. Get Private Messages\n5. Change status\n6. Change username\n7. Change password\n8. Exit\n")
     clear()
@@ -113,7 +117,6 @@ def internal_menu(client,nickname):
         
         # Starting Thread For Writing
         write_thread = threading.Thread(target=write, args=(client,nickname))
-        write_thread.daemon = True
         write_thread.start()
 
         # Starting Thread For Readin public buffer
@@ -191,6 +194,7 @@ def internal_menu(client,nickname):
         clear()
         print('Exit program')
         client.close()
+        quit = True
         exit()
     
     else:
@@ -200,71 +204,80 @@ def internal_menu(client,nickname):
 
 # Listening to Server and Sending Nickname
 def receive(client,nickname):
+    global quit
     global private_mode
     global public_mode
     while True:
         try:
-            # Receive Message From Server
-            message = client.recv(1024).decode('ascii')
-
-            if message.startswith('receive-message'):
-                if private_mode:
-                    print(message[15:])
-                else:
-                    private_messages.append(message[15:])
-            
-            elif message.startswith('send-private'):
-                if message[13:] == 'OK':
-                    print('Your message is sent\n')
-                else:
-                    print('User is busy!\n')
-
-            elif message.startswith('modify-status'):
-                if message[14:] == 'OK':
-                    print('Your Status is updated\n')
-                else:
-                    print('Your request was not accepted\n')
-
-            elif message.startswith('modify-username'):
-                if message[16:] == 'OK':
-                    print('Your Username is updated\n')
-                else:
-                    print('This username is already taken!\n')
-
-            elif message.startswith('modify-password'):
-                if message[16:] == 'OK':
-                    print('Your Password is updated\n')
-                else:
-                    print('Your request was not accepted\n')
-
+            if quit:
+                break
             else:
-                if public_mode:
-                    print(message)
-                else:
-                    public_messages.append(message)
+                # Receive Message From Server
+                message = client.recv(1024).decode('ascii')
+
+                if message.startswith('receive-message'):
+                    if private_mode:
+                        print(message[15:])
+                    else:
+                        private_messages.append(message[15:])
                 
-        except:
+                elif message.startswith('send-private'):
+                    if message[13:] == 'OK':
+                        print('Your message is sent\n')
+                    else:
+                        print('User is busy!\n')
+
+                elif message.startswith('modify-status'):
+                    if message[14:] == 'OK':
+                        print('Your Status is updated\n')
+                    else:
+                        print('Your request was not accepted\n')
+
+                elif message.startswith('modify-username'):
+                    if message[16:] == 'OK':
+                        print('Your Username is updated\n')
+                    else:
+                        print('This username is already taken!\n')
+
+                elif message.startswith('modify-password'):
+                    if message[16:] == 'OK':
+                        print('Your Password is updated\n')
+                    else:
+                        print('Your request was not accepted\n')
+
+                else:
+                    if public_mode:
+                        print(message)
+                    else:
+                        public_messages.append(message)
+                    
+        except Exception as e:
+            # print(e)
             # Close Connection When Error
-            print(f"An error occured!")
+            # print(f"An error occured!")
             client.close()
             break
         
 
 # Sending Messages To Server
 def write(client,nickname):
+    global quit
     global public_mode
     while True:
-        text = input('\n')
-        if text == "quit":
-            clear()
-            public_mode=False
-            internal_menu(client,nickname)
+        if quit:
             break
         else:
-            strtime = stime()
-            message = '\n{}\n{}: {}'.format(strtime, nickname, text)
-            client.send(message.encode('ascii'))
-        
+            text = input('')
+            if text == "quit":
+                clear()
+                public_mode=False
+                internal_menu(client,nickname)
+                break
+            else:
+                strtime = stime()
+                message = '\n{}\n{}: {}'.format(strtime, nickname, text)
+                client.send(message.encode('ascii'))
+
 def read_private_buffer():
     global private_mode
     while True:
@@ -291,6 +304,7 @@ def main_menu():
 
     global public_mode
     global private_mode
+    global quit
     
     public_mode = False
     private_mode = False
@@ -332,7 +346,6 @@ def main_menu():
 
         # Starting Threads For Listening And Reading
         receive_thread = threading.Thread(target=receive, args=(client,nickname))
-        receive_thread.daemon = True
         receive_thread.start()
         
         if status == "available":
@@ -342,6 +355,8 @@ def main_menu():
     
     elif choose == "3":
         clear()
+        quit = True
+        client.close()
         exit()
     
     else:

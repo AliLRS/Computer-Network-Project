@@ -21,7 +21,7 @@ class User:
     password = ""
     is_online = False
     is_busy = False
-    message = []
+    messages = []
 
     def __init__(self, client, username, password):
         self.client = client
@@ -40,7 +40,7 @@ class User:
     def online(self, status):
         self.is_online = status
     def new_message(self, new):
-        self.message.append(new)
+        self.messages.append(new)
 
 
 # Sending Messages To All Connected online_clients
@@ -48,7 +48,10 @@ def broadcast(message,curr):
     for user in users:
         if user.client == curr:
             continue
-        user.client.send(message)
+        if user.is_online:
+            user.client.send(message)
+        else:
+            user.new_message(message)
 
 # Sending Messages To Special Client
 def unitcast(message,to):
@@ -156,11 +159,16 @@ def receive():
         # Print And Broadcast Nickname
         print("Username: {}".format(nickname))
         # broadcast("{} joined!".format(nickname).encode('ascii'),client)
-        client.send('Connected to Chatroom!'.encode('ascii'))
+        # client.send('Connected to Chatroom!'.encode('ascii'))
 
         # Start Handling Thread For Client
         thread = threading.Thread(target=handle, args=(client,))
         thread.start()
+
+        # for user in users:
+        #     if user.client == client:
+        #         for message in user.messages:
+        #             user.client.send(message)
 
 
 def get_online_clients():
