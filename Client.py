@@ -4,6 +4,7 @@ import os
 import msvcrt
 import hashlib
 import time
+from getpass import getpass
 
 clear = lambda: os.system('cls')
 
@@ -75,7 +76,7 @@ def busy_user_menu(client,nickname):
         busy_user_menu(client,nickname)
         
     elif choose == "4":
-        new_password = input('Enter your new password: ')
+        new_password = getpass('Enter your new password: ')
         clear()
         hashed_new_password = hashlib.sha256(new_password.encode()).hexdigest()
         client.send('modify#password#{}'.format(hashed_new_password).encode('ascii'))
@@ -182,7 +183,7 @@ def internal_menu(client,nickname):
         internal_menu(client,nickname)
         
     elif choose == "7":
-        new_password = input('Enter your new password: ')
+        new_password = getpass('Enter your new password: ')
         clear()
         hashed_new_password = hashlib.sha256(new_password.encode()).hexdigest()
         client.send('modify#password#{}'.format(hashed_new_password).encode('ascii'))
@@ -342,8 +343,8 @@ def main_menu():
     elif choose == "2":
     
         # Choosing Nickname
-        nickname = input(f"Enter your username: ")
-        password = input(f"Enter your password: ")
+        nickname = input("Enter your username: ")
+        password = getpass("Enter your password: ")
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
     
         # Connecting To Server
@@ -359,7 +360,7 @@ def main_menu():
             client.send(hashed_password.encode('ascii'))
 
         while 'NOTOK' == client.recv(1024).decode('ascii'):
-            password = input('Wrong Password\nTry again: ')
+            password = getpass('Wrong Password\nTry again: ')
             hashed_password = hashlib.sha256(password.encode()).hexdigest()
             client.send(hashed_password.encode('ascii'))
 
