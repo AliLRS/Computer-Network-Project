@@ -139,7 +139,7 @@ def internal_menu(client,nickname):
         private_message = input()
         clear()
         strtime = stime()
-        message = 'send-private{}#\n{}\n{}: {}\n'.format(client_nicknames[recipient], strtime, nickname, private_message)
+        message = 'send-private{}#\n{}\n{}: {}\n'.format(client_nicknames[recipient-1], strtime, nickname, private_message)
         client.send(message.encode('ascii'))
         time.sleep(0.1)
         internal_menu(client,nickname)
@@ -346,7 +346,7 @@ def main_menu():
         # Starting Threads For Listening And Reading
         receive_thread = threading.Thread(target=receive, args=(client,nickname))
         receive_thread.start()
-        
+        clear()
         if status == "available":
             internal_menu(client,nickname)
         elif status == "busy":

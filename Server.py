@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 # Connection Data
 host = '127.0.0.1'
@@ -70,7 +71,11 @@ def handle(client):
                         if not user.is_busy:
                             recipient_socket = user.client
                             message = "receive-message"+message[message.find('#')+1:]
-                            unitcast(message.encode('ascii'),recipient_socket)
+                            message = message.encode('ascii')
+                            if user.is_online:
+                                unitcast(message,recipient_socket)
+                            else:
+                                user.new_message(message)
                             client.send('send-private#OK'.encode('ascii'))
                         else:
                             client.send("send-private#NOTOK".encode('ascii'))
@@ -162,6 +167,7 @@ def receive():
         print("Username: {}".format(nickname))
         broadcast("{} joined!".format(nickname).encode('ascii'),client)
         client.send('Connected to Chatroom!'.encode('ascii'))
+        time.sleep(0.1)
         for user in users:
             if user.client == client:
                 for message in user.messages:
@@ -181,8 +187,7 @@ def get_online_clients():
         _ , client_address = UDP_server_socket.recvfrom(2048)
         usernames = []
         for user in users:
-            if user.is_online == True:
-                usernames.append(user.username)
+            usernames.append(user.username)
         modified_message = ', '.join(usernames)
         UDP_server_socket.sendto(modified_message.encode('ascii'),client_address)
 
