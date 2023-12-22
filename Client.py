@@ -123,7 +123,7 @@ def internal_menu(client,nickname):
     global chatTo
     global quit
 
-    choose = input("1. Get connected clients\n2. Enter Public Chatroom\n3. Enter Private Chatroom\n4. Enter Group Chatroom\n5. Change status\n6. Change username\n7. Change password\n8. Exit\n")
+    choose = input("1. Get connected clients\n2. Enter Public Chatroom\n3. Enter Private Chatroom\n4. Send message in group\n5. Change status\n6. Change username\n7. Change password\n8. Exit\n")
     clear()
 
     if choose == "1":
@@ -165,17 +165,25 @@ def internal_menu(client,nickname):
         read_private_buffer(client_nicknames[recipient-1],nickname)
 
     elif choose == "4":
-
-        # private_mode=True
-        # print(f'Press any key to quit')
+        print("Who are the recipients of this message?")
+        client_nicknames = get_clients().split(', ')
+        num = 1
+        for name in client_nicknames:
+            print(str(num)+". "+name)
+            num=num+1
         
-        # read_private_buffer()
+        recipients = input()
+        recipients = recipients.split(', ')
 
-        # get_char()
-        # clear()
-        # private_mode=False
-        # internal_menu(client,nickname)
-        pass
+        text = input("What is your message?\n")
+
+        strtime = stime()
+        for recipient in recipients:
+            message = 'send-private{}#\n{}\n{}: {}\n'.format(client_nicknames[int(recipient)-1], strtime, nickname, text)
+            client.send(message.encode('ascii'))
+            private_messages.append(message[12:])
+        clear()
+        internal_menu(client,nickname)
 
     elif choose == "5":
         status = input('What is your status?\n1.busy    2.available\n')
