@@ -149,6 +149,8 @@ def receive():
                     else:
                         client.send('NOTOK'.encode('ascii'))
                         password = client.recv(1024).decode('ascii') 
+                if login:
+                    break
                        
         if not login:
             new_user = User(client, nickname, password)
@@ -158,17 +160,17 @@ def receive():
         
         # Print And Broadcast Nickname
         print("Username: {}".format(nickname))
-        # broadcast("{} joined!".format(nickname).encode('ascii'),client)
-        # client.send('Connected to Chatroom!'.encode('ascii'))
+        broadcast("{} joined!".format(nickname).encode('ascii'),client)
+        client.send('Connected to Chatroom!'.encode('ascii'))
+        for user in users:
+            if user.client == client:
+                for message in user.messages:
+                    user.client.send(message)
+                break
 
         # Start Handling Thread For Client
         thread = threading.Thread(target=handle, args=(client,))
         thread.start()
-
-        # for user in users:
-        #     if user.client == client:
-        #         for message in user.messages:
-        #             user.client.send(message)
 
 
 def get_online_clients():

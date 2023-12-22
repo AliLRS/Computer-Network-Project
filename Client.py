@@ -127,18 +127,19 @@ def internal_menu(client,nickname):
 
         client_nicknames = get_clients().split(', ')
         print('Who is the recipient of this message?')
-        num = 0
+        num = 1
         for name in client_nicknames:
             print(str(num)+". "+name)
             num=num+1
         
         recipient = int(input())
+
         
         print("Enter your message:")
         private_message = input()
         clear()
         strtime = stime()
-        message = 'send-private{}#{}\n{}: {}'.format(client_nicknames[recipient], strtime, nickname, private_message)
+        message = 'send-private{}#\n{}\n{}: {}\n'.format(client_nicknames[recipient], strtime, nickname, private_message)
         client.send(message.encode('ascii'))
         time.sleep(0.1)
         internal_menu(client,nickname)
@@ -246,13 +247,14 @@ def receive(client,nickname):
                         print('Your request was not accepted\n')
 
                 else:
+                    print(public_mode)
                     if public_mode:
                         print(message)
                     else:
                         public_messages.append(message)
                     
         except Exception as e:
-            # print(e)
+            print(e)
             # Close Connection When Error
             # print(f"An error occured!")
             client.close()
@@ -275,7 +277,7 @@ def write(client,nickname):
                 break
             else:
                 strtime = stime()
-                message = '\n{}\n{}: {}'.format(strtime, nickname, text)
+                message = '\n{}\n{}: {}\n'.format(strtime, nickname, text)
                 client.send(message.encode('ascii'))
 
 def read_private_buffer():
@@ -336,21 +338,20 @@ def main_menu():
         if message == 'PASS':
             client.send(hashed_password.encode('ascii'))
 
-        while 'OK' != client.recv(1024).decode('ascii'):
+        while 'NOTOK' == client.recv(1024).decode('ascii'):
             password = input('Wrong Password\nTry again: ')
             hashed_password = hashlib.sha256(password.encode()).hexdigest()
             client.send(hashed_password.encode('ascii'))
-        
-        clear()
-        status = client.recv(1024).decode('ascii')
 
+        status = client.recv(1024).decode('ascii')
         # Starting Threads For Listening And Reading
         receive_thread = threading.Thread(target=receive, args=(client,nickname))
         receive_thread.start()
         
+        print(status)
         if status == "available":
             internal_menu(client,nickname)
-        else:
+        elif status == "busy":
             busy_user_menu(client,nickname)
     
     elif choose == "3":
