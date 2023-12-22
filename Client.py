@@ -33,6 +33,62 @@ def get_clients():
         return 'No clients connected'
     
     return message.decode('ascii')
+
+def busy_user_menu(client,nickname):
+    choose = input("1. Get connected clients\n2. Change status\n3. Change username\n4. Change password\n5. Exit\n")
+    clear()
+
+    if choose == "1":
+
+        print(get_clients() + '\n')
+        print(f'Press any key to quit') 
+        get_char()
+        clear()
+        busy_user_menu(client,nickname)
+    
+    elif choose == "2":
+        status = input('What is your status?\n1.busy    2.available\n')
+        clear()
+        if status == "1" or status == "2":
+            if status == "1":
+                status = "busy"
+            else:
+                status = "available"
+            client.send('modify#status#{}'.format(status).encode('ascii'))
+        else:
+            clear()
+            print('Invalid input\n')
+        time.sleep(0.1)
+        if status == "busy":
+            busy_user_menu(client,nickname)
+        else:
+            internal_menu(client,nickname)
+
+    elif choose == "3":
+        new_username = input('Enter your new username: ')
+        clear()
+        client.send('modify#username#{}'.format(new_username).encode('ascii'))
+        time.sleep(0.1)
+        busy_user_menu(client,nickname)
+        
+    elif choose == "4":
+        new_password = input('Enter your new password: ')
+        clear()
+        hashed_new_password = hashlib.sha256(new_password.encode()).hexdigest()
+        client.send('modify#password#{}'.format(hashed_new_password).encode('ascii'))
+        time.sleep(0.1)
+        busy_user_menu(client,nickname)
+
+    elif choose == "5":
+        clear()
+        print('Exit program')
+        exit()
+    
+    else:
+        clear()
+        print('Invalid input')
+        internal_menu(client,nickname)
+        
  
 def internal_menu(client,nickname):
 
@@ -109,7 +165,10 @@ def internal_menu(client,nickname):
             clear()
             print('Invalid input\n')
         time.sleep(0.1)
-        internal_menu(client,nickname)
+        if status == "busy":
+            busy_user_menu(client,nickname)
+        else:
+            internal_menu(client,nickname)
         
     elif choose == "6":
         new_username = input('Enter your new username: ')
@@ -192,7 +251,7 @@ def receive(client,nickname):
 def write(client,nickname):
     global public_mode
     while True:
-        text = input('')
+        text = input('\n')
         if text == "quit":
             clear()
             public_mode=False
@@ -265,12 +324,17 @@ def main_menu():
             hashed_password = hashlib.sha256(password.encode()).hexdigest()
             client.send(hashed_password.encode('ascii'))
         
+        clear()
+        status = client.recv(1024).decode('ascii')
+
         # Starting Threads For Listening And Reading
         receive_thread = threading.Thread(target=receive, args=(client,nickname))
         receive_thread.start()
         
-        clear()
-        internal_menu(client,nickname)
+        if status == "available":
+            internal_menu(client,nickname)
+        else:
+            busy_user_menu(client,nickname)
     
     elif choose == "3":
         clear()

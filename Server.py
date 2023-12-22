@@ -138,6 +138,11 @@ def receive():
                         login = True
                         user.change_client(client)
                         client.send('OK'.encode('ascii'))
+                        if user.is_busy:
+                            status = "busy"
+                        else:
+                            status = "available"
+                        client.send(status.encode('ascii'))
                     else:
                         client.send('NOTOK'.encode('ascii'))
                         password = client.recv(1024).decode('ascii') 
@@ -146,11 +151,12 @@ def receive():
             new_user = User(client, nickname, password)
             users.append(new_user)
             client.send('OK'.encode('ascii'))
+            client.send('available'.encode('ascii'))
         
         # Print And Broadcast Nickname
         print("Username: {}".format(nickname))
-        broadcast("{} joined!".format(nickname).encode('ascii'),client)
-        client.send('Connected to Chatroom!'.encode('ascii'))
+        # broadcast("{} joined!".format(nickname).encode('ascii'),client)
+        # client.send('Connected to Chatroom!'.encode('ascii'))
 
         # Start Handling Thread For Client
         thread = threading.Thread(target=handle, args=(client,))
