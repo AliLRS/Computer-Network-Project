@@ -25,8 +25,27 @@ def stime():
     arr = time.asctime(time.localtime()).split(' ')
     return ' '.join(arr[1:3]) + ' at ' + ' '.join(arr[3:4])
 
-def get_clients():
+def read_file(filename):
+    data = ''
+    with open(filename, 'r') as f:
+        data = f.read()
+    data = data.split('\n***\n')
+    private_messages = data[0].split('\n###\n')
+    public_messages = data[1].split('\n###\n')
+    
+def write_file(filename):
+    open(filename, 'w').close() 
 
+    with open(filename, 'a') as f:
+        for pm in private_messages:
+            f.write(pm + '\n###\n')
+
+        f.write('\n***\n')
+
+        for pm in public_messages:
+            f.write(pm + '\n###\n')
+
+def get_clients():
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client.sendto("get clients".encode(),('127.0.0.1',33333))
     message, _ = client.recvfrom(2048)
@@ -84,6 +103,7 @@ def busy_user_menu(client,nickname):
         busy_user_menu(client,nickname)
 
     elif choose == "5":
+        write_file(nickname+'.txt')
         clear()
         print('Exit program')
         quit = True
@@ -191,6 +211,7 @@ def internal_menu(client,nickname):
         internal_menu(client,nickname)
 
     elif choose == "8":
+        write_file(nickname+'.txt')
         clear()
         print('Exit program')
         client.close()
@@ -364,6 +385,8 @@ def main_menu():
             hashed_password = hashlib.sha256(password.encode()).hexdigest()
             client.send(hashed_password.encode('ascii'))
 
+        read_file(nickname+'.txt')
+
         status = client.recv(1024).decode('ascii')
         # Starting Threads For Listening And Reading
         receive_thread = threading.Thread(target=receive, args=(client,nickname))
@@ -375,7 +398,9 @@ def main_menu():
             busy_user_menu(client,nickname)
     
     elif choose == "3":
+        write_file(nickname+'.txt')
         clear()
+        print('Exit program')
         quit = True
         exit()
     
