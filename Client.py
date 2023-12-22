@@ -25,13 +25,14 @@ def stime():
     arr = time.asctime(time.localtime()).split(' ')
     return ' '.join(arr[1:3]) + ' at ' + ' '.join(arr[3:4])
 
-def read_file(filename, private_messages, public_messages):
+def read_file(filename):
     data = ''
     with open(filename, 'r') as f:
         data = f.read()
     data = data.split('\n***\n')
     private_messages = data[0].split('\n###\n')[:-1]
     public_messages = data[1].split('\n###\n')[:-1]
+    return private_messages, public_messages
     
 def write_file(filename):
     open(filename, 'w').close() 
@@ -357,6 +358,8 @@ def main_menu():
     global public_mode
     global private_mode
     global quit
+    global public_messages
+    global private_messages
     
     public_mode = False
     private_mode = False
@@ -393,7 +396,8 @@ def main_menu():
             hashed_password = hashlib.sha256(password.encode()).hexdigest()
             client.send(hashed_password.encode('ascii'))
 
-        read_file(nickname+'.txt', private_messages, public_messages)
+        if os.path.isfile(nickname+'.txt'):
+            private_messages, public_messages = read_file(nickname+'.txt')
 
         status = client.recv(1024).decode('ascii')
         # Starting Threads For Listening And Reading
