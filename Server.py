@@ -47,7 +47,7 @@ class User:
 # Sending Messages To All Connected online_clients
 def broadcast(message,curr):
     for user in users:
-        if user.client == curr:
+        if user.client == curr or user.is_busy:
             continue
         if user.is_online:
             user.client.send(message)
@@ -68,6 +68,8 @@ def handle(client):
                 recipient_nickname = message[12:message.find('#')]
                 for user in users:
                     if user.username == recipient_nickname:
+                        if user.client == client:
+                            break
                         if not user.is_busy:
                             recipient_socket = user.client
                             message = "receive-message"+message[12:]
@@ -187,7 +189,8 @@ def get_online_clients():
         _ , client_address = UDP_server_socket.recvfrom(2048)
         usernames = []
         for user in users:
-            usernames.append(user.username)
+            if not user.is_busy:
+                usernames.append(user.username)
         modified_message = ', '.join(usernames)
         UDP_server_socket.sendto(modified_message.encode('ascii'),client_address)
 

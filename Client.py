@@ -92,6 +92,7 @@ def busy_user_menu(client,nickname):
         new_username = input('Enter your new username: ')
         clear()
         client.send('modify#username#{}'.format(new_username).encode('ascii'))
+        nickname = new_username
         time.sleep(0.1)
         busy_user_menu(client,nickname)
         
@@ -153,17 +154,24 @@ def internal_menu(client,nickname):
         print('Directs:')
         num = 1
         for name in client_nicknames:
-            print(str(num)+". "+name)
+            if name == nickname:
+                print(str(num)+'. saved messages')
+            else:
+                print(str(num)+". "+name)
             num=num+1
-        
+        print(str(num)+'. back')
         recipient = int(input())
-        chatTo = client_nicknames[recipient-1]
+        if recipient == num:
+            clear()
+            internal_menu(client,nickname)
+        else:
+            chatTo = client_nicknames[recipient-1]
 
-        clear()
-        write_privatr_thread = threading.Thread(target=write_private, args=(client,nickname,client_nicknames[recipient-1]))
-        write_privatr_thread.start()
+            clear()
+            write_privatr_thread = threading.Thread(target=write_private, args=(client,nickname,client_nicknames[recipient-1]))
+            write_privatr_thread.start()
 
-        read_private_buffer(client_nicknames[recipient-1],nickname)
+            read_private_buffer(client_nicknames[recipient-1],nickname)
 
     elif choose == "4":
         print("Who are the recipients of this message?")
@@ -206,6 +214,7 @@ def internal_menu(client,nickname):
         
     elif choose == "6":
         new_username = input('Enter your new username: ')
+        nickname = new_username
         clear()
         client.send('modify#username#{}'.format(new_username).encode('ascii'))
         time.sleep(0.1)
