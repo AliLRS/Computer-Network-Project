@@ -115,7 +115,7 @@ def busy_user_menu(client,nickname):
     else:
         clear()
         print('Invalid input')
-        internal_menu(client,nickname)
+        busy_user_menu(client,nickname)
         
  
 def internal_menu(client,nickname):
@@ -160,18 +160,30 @@ def internal_menu(client,nickname):
                 print(str(num)+". "+name)
             num=num+1
         print(str(num)+'. back')
-        recipient = int(input())
-        if recipient == num:
-            clear()
-            internal_menu(client,nickname)
-        else:
-            chatTo = client_nicknames[recipient-1]
 
-            clear()
-            write_privatr_thread = threading.Thread(target=write_private, args=(client,nickname,client_nicknames[recipient-1]))
-            write_privatr_thread.start()
+        recipient = input()
+        try:
+            recipient = int(recipient)
+            if recipient == num:
+                clear()
+                internal_menu(client,nickname)
+            elif recipient<num and recipient>0:
+                chatTo = client_nicknames[recipient-1]
 
-            read_private_buffer(client_nicknames[recipient-1],nickname)
+                clear()
+                write_privatr_thread = threading.Thread(target=write_private, args=(client,nickname,client_nicknames[recipient-1]))
+                write_privatr_thread.start()
+
+                read_private_buffer(client_nicknames[recipient-1],nickname)
+            else:
+                clear()
+                print("invalid input!")
+                internal_menu(client,nickname)
+
+        except ValueError:
+            clear()
+            print("invalid input!")
+            internal_menu(client,nickname)            
 
     elif choose == "4":
         print("Who are the recipients of this message?")
@@ -180,19 +192,27 @@ def internal_menu(client,nickname):
         for name in client_nicknames:
             print(str(num)+". "+name)
             num=num+1
-        
-        recipients = input()
-        recipients = recipients.split(', ')
+        try:
+            recipients = input()
+            recipients = recipients.split(', ')
+            text = input("What is your message?\n")
 
-        text = input("What is your message?\n")
+            strtime = stime()
+            for recipient in recipients:
+                message = 'send-private{}#\n{}\n{}: {}\n'.format(client_nicknames[int(recipient)-1], strtime, nickname, text)
+                client.send(message.encode('ascii'))
+                private_messages.append(message[12:])
+            clear()
+            internal_menu(client,nickname)
 
-        strtime = stime()
-        for recipient in recipients:
-            message = 'send-private{}#\n{}\n{}: {}\n'.format(client_nicknames[int(recipient)-1], strtime, nickname, text)
-            client.send(message.encode('ascii'))
-            private_messages.append(message[12:])
-        clear()
-        internal_menu(client,nickname)
+        except ValueError:
+            clear()
+            print("invalid input!")
+            internal_menu(client,nickname)
+        except IndexError:
+            clear()
+            print("invalid input!")
+            internal_menu(client,nickname)
 
     elif choose == "5":
         status = input('What is your status?\n1.busy    2.available\n')
